@@ -825,6 +825,7 @@ func ClaudeStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.
 	}
 
 	HandleStreamFinalResponse(c, info, claudeInfo)
+	info.Completion = claudeInfo.ResponseText.String()
 	return claudeInfo.Usage, nil
 }
 
@@ -868,6 +869,12 @@ func HandleClaudeResponseData(c *gin.Context, info *relaycommon.RelayInfo, claud
 		c.Set("claude_web_search_requests", claudeResponse.Usage.ServerToolUse.WebSearchRequests)
 	}
 
+	for _, content := range claudeResponse.Content {
+		if content.Type == "text" {
+			claudeInfo.ResponseText.WriteString(content.GetText())
+		}
+	}
+
 	service.IOCopyBytesGracefully(c, httpResp, responseData)
 	return nil
 }
@@ -893,6 +900,7 @@ func ClaudeHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayI
 	if handleErr != nil {
 		return nil, handleErr
 	}
+	info.Completion = claudeInfo.ResponseText.String()
 	return claudeInfo.Usage, nil
 }
 

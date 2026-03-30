@@ -37,6 +37,8 @@ type Log struct {
 	Ip               string `json:"ip" gorm:"index;default:''"`
 	RequestId        string `json:"request_id,omitempty" gorm:"type:varchar(64);index:idx_logs_request_id;default:''"`
 	Other            string `json:"other"`
+	Prompt           string `json:"prompt" gorm:"type:text"`
+	Completion       string `json:"completion" gorm:"type:text"`
 }
 
 // don't use iota, avoid change log type value
@@ -146,6 +148,8 @@ type RecordConsumeLogParams struct {
 	IsStream         bool                   `json:"is_stream"`
 	Group            string                 `json:"group"`
 	Other            map[string]interface{} `json:"other"`
+	Prompt           string                 `json:"prompt"`
+	Completion       string                 `json:"completion"`
 }
 
 func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams) {
@@ -185,8 +189,10 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 			}
 			return ""
 		}(),
-		RequestId: requestId,
-		Other:     otherStr,
+		RequestId:  requestId,
+		Other:      otherStr,
+		Prompt:     params.Prompt,
+		Completion: params.Completion,
 	}
 	err := LOG_DB.Create(log).Error
 	if err != nil {
@@ -242,7 +248,7 @@ func RecordTaskBillingLog(params RecordTaskBillingLogParams) {
 	}
 }
 
-func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, startIdx int, num int, channel int, group string, requestId string) (logs []*Log, total int64, err error) {
+func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName string, username string, tokenName string, startIdx int, num int, channel int, group string, requestId string, keyword string) (logs []*Log, total int64, err error) {
 	var tx *gorm.DB
 	if logType == LogTypeUnknown {
 		tx = LOG_DB
@@ -261,6 +267,9 @@ func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName
 	}
 	if requestId != "" {
 		tx = tx.Where("logs.request_id = ?", requestId)
+	}
+	if keyword != "" {
+		tx = tx.Where("logs.prompt LIKE ? OR logs.completion LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
 	}
 	if startTimestamp != 0 {
 		tx = tx.Where("logs.created_at >= ?", startTimestamp)
@@ -328,7 +337,7 @@ func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName
 
 const logSearchCountLimit = 10000
 
-func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int64, modelName string, tokenName string, startIdx int, num int, group string, requestId string) (logs []*Log, total int64, err error) {
+func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int64, modelName string, tokenName string, startIdx int, num int, group string, requestId string, keyword string) (logs []*Log, total int64, err error) {
 	var tx *gorm.DB
 	if logType == LogTypeUnknown {
 		tx = LOG_DB.Where("logs.user_id = ?", userId)
@@ -348,6 +357,9 @@ func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int
 	}
 	if requestId != "" {
 		tx = tx.Where("logs.request_id = ?", requestId)
+	}
+	if keyword != "" {
+		tx = tx.Where("logs.prompt LIKE ? OR logs.completion LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
 	}
 	if startTimestamp != 0 {
 		tx = tx.Where("logs.created_at >= ?", startTimestamp)

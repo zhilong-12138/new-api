@@ -1344,6 +1344,8 @@ func geminiStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http
 		}
 	}
 
+	info.Completion = responseText.String()
+
 	return usage, nil
 }
 
@@ -1488,6 +1490,11 @@ func GeminiChatHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.R
 	}
 	fullTextResponse := responseGeminiChat2OpenAI(c, &geminiResponse)
 	fullTextResponse.Model = info.UpstreamModelName
+
+	if len(fullTextResponse.Choices) > 0 {
+		info.Completion = common.GetJsonString(fullTextResponse.Choices[0].Message)
+	}
+
 	usage := buildUsageFromGeminiMetadata(geminiResponse.UsageMetadata, info.GetEstimatePromptTokens())
 
 	fullTextResponse.Usage = usage

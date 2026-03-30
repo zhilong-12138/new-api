@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal } from '@douyinfe/semi-ui';
+import { Modal, Typography } from '@douyinfe/semi-ui';
 import {
   API,
   getTodayStartTimestamp,
@@ -99,6 +99,7 @@ export const useLogsData = () => {
     channel: '',
     group: '',
     request_id: '',
+    keyword: '',
     dateRange: [
       timestamp2string(getTodayStartTimestamp()),
       timestamp2string(now.getTime() / 1000 + 3600),
@@ -255,6 +256,7 @@ export const useLogsData = () => {
       channel: formValues.channel || '',
       group: formValues.group || '',
       request_id: formValues.request_id || '',
+      keyword: formValues.keyword || '',
       logType: formValues.logType ? parseInt(formValues.logType) : 0,
     };
   };
@@ -267,12 +269,13 @@ export const useLogsData = () => {
       start_timestamp,
       end_timestamp,
       group,
+      keyword,
       logType: formLogType,
     } = getFormValues();
     const currentLogType = formLogType !== undefined ? formLogType : logType;
     let localStartTimestamp = Date.parse(start_timestamp) / 1000;
     let localEndTimestamp = Date.parse(end_timestamp) / 1000;
-    let url = `/api/log/self/stat?type=${currentLogType}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&group=${group}`;
+    let url = `/api/log/self/stat?type=${currentLogType}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&group=${group}&keyword=${keyword}`;
     url = encodeURI(url);
     let res = await API.get(url);
     const { success, message, data } = res.data;
@@ -292,12 +295,13 @@ export const useLogsData = () => {
       end_timestamp,
       channel,
       group,
+      keyword,
       logType: formLogType,
     } = getFormValues();
     const currentLogType = formLogType !== undefined ? formLogType : logType;
     let localStartTimestamp = Date.parse(start_timestamp) / 1000;
     let localEndTimestamp = Date.parse(end_timestamp) / 1000;
-    let url = `/api/log/stat?type=${currentLogType}&username=${username}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&channel=${channel}&group=${group}`;
+    let url = `/api/log/stat?type=${currentLogType}&username=${username}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&channel=${channel}&group=${group}&keyword=${keyword}`;
     url = encodeURI(url);
     let res = await API.get(url);
     const { success, message, data } = res.data;
@@ -372,6 +376,16 @@ export const useLogsData = () => {
         return t('原生格式');
       }
       return `${chain.join(' -> ')}`;
+    };
+
+    const formatDialogueContent = (content) => {
+      if (!content) return content;
+      try {
+        const obj = JSON.parse(content);
+        return JSON.stringify(obj, null, 2);
+      } catch (e) {
+        return content;
+      }
     };
 
     let expandDatesLocal = {};
@@ -474,6 +488,61 @@ export const useLogsData = () => {
           });
         }
       }
+
+      if (logs[i].prompt) {
+        expandDataLocal.push({
+          key: t('对话请求'),
+          value: (
+            <Typography.Paragraph
+              ellipsis={{
+                rows: 10,
+                expandable: true,
+                symbol: t('展开'),
+                collapsible: true,
+              }}
+              copyable
+              style={{
+                background: 'var(--semi-color-fill-0)',
+                padding: '8px',
+                borderRadius: '4px',
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+              }}
+            >
+              {formatDialogueContent(logs[i].prompt)}
+            </Typography.Paragraph>
+          ),
+        });
+      }
+
+      if (logs[i].completion) {
+        expandDataLocal.push({
+          key: t('对话返回'),
+          value: (
+            <Typography.Paragraph
+              ellipsis={{
+                rows: 10,
+                expandable: true,
+                symbol: t('展开'),
+                collapsible: true,
+              }}
+              copyable
+              style={{
+                background: 'var(--semi-color-fill-0)',
+                padding: '8px',
+                borderRadius: '4px',
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+              }}
+            >
+              {formatDialogueContent(logs[i].completion)}
+            </Typography.Paragraph>
+          ),
+        });
+      }
+
       if (logs[i].type === 2) {
         let modelMapped =
           other?.is_model_mapped &&
@@ -704,6 +773,7 @@ export const useLogsData = () => {
       channel,
       group,
       request_id,
+      keyword,
       logType: formLogType,
     } = getFormValues();
 
@@ -717,9 +787,9 @@ export const useLogsData = () => {
     let localStartTimestamp = Date.parse(start_timestamp) / 1000;
     let localEndTimestamp = Date.parse(end_timestamp) / 1000;
     if (isAdminUser) {
-      url = `/api/log/?p=${startIdx}&page_size=${pageSize}&type=${currentLogType}&username=${username}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&channel=${channel}&group=${group}&request_id=${request_id}`;
+      url = `/api/log/?p=${startIdx}&page_size=${pageSize}&type=${currentLogType}&username=${username}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&channel=${channel}&group=${group}&request_id=${request_id}&keyword=${keyword}`;
     } else {
-      url = `/api/log/self/?p=${startIdx}&page_size=${pageSize}&type=${currentLogType}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&group=${group}&request_id=${request_id}`;
+      url = `/api/log/self/?p=${startIdx}&page_size=${pageSize}&type=${currentLogType}&token_name=${token_name}&model_name=${model_name}&start_timestamp=${localStartTimestamp}&end_timestamp=${localEndTimestamp}&group=${group}&request_id=${request_id}&keyword=${keyword}`;
     }
     url = encodeURI(url);
     const res = await API.get(url);

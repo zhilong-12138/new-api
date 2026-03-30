@@ -151,6 +151,9 @@ type RelayInfo struct {
 	UseRuntimeHeadersOverride             bool
 	ParamOverrideAudit                    []string
 
+	Prompt     string
+	Completion string
+
 	PriceData types.PriceData
 
 	Request dto.Request

@@ -31,6 +31,15 @@ func ClaudeHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *typ
 		return types.NewErrorWithStatusCode(fmt.Errorf("invalid request type, expected *dto.ClaudeRequest, got %T", info.Request), types.ErrorCodeInvalidRequest, http.StatusBadRequest, types.ErrOptionWithSkipRetry())
 	}
 
+	if len(claudeReq.Messages) > 0 {
+		lastMessage := claudeReq.Messages[len(claudeReq.Messages)-1]
+		if str, ok := lastMessage.Content.(string); ok {
+			info.Prompt = str
+		} else {
+			info.Prompt = common.GetJsonString(lastMessage.Content)
+		}
+	}
+
 	request, err := common.DeepCopy(claudeReq)
 	if err != nil {
 		return types.NewError(fmt.Errorf("failed to copy request to ClaudeRequest: %w", err), types.ErrorCodeInvalidRequest, types.ErrOptionWithSkipRetry())

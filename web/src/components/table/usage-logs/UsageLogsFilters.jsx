@@ -102,6 +102,15 @@ const LogsFilters = ({
             size='small'
           />
 
+          <Form.Input
+            field='keyword'
+            prefix={<IconSearch />}
+            placeholder={t('对话内容关键字')}
+            showClear
+            pure
+            size='small'
+          />
+
           {isAdminUser && (
             <>
               <Form.Input

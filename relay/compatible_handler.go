@@ -31,6 +31,15 @@ func TextHelper(c *gin.Context, info *relaycommon.RelayInfo) (newAPIError *types
 		return types.NewErrorWithStatusCode(fmt.Errorf("invalid request type, expected dto.GeneralOpenAIRequest, got %T", info.Request), types.ErrorCodeInvalidRequest, http.StatusBadRequest, types.ErrOptionWithSkipRetry())
 	}
 
+	if len(textReq.Messages) > 0 {
+		lastMessage := textReq.Messages[len(textReq.Messages)-1]
+		if str, ok := lastMessage.Content.(string); ok {
+			info.Prompt = str
+		} else {
+			info.Prompt = common.GetJsonString(lastMessage.Content)
+		}
+	}
+
 	request, err := common.DeepCopy(textReq)
 	if err != nil {
 		return types.NewError(fmt.Errorf("failed to copy request to GeneralOpenAIRequest: %w", err), types.ErrorCodeInvalidRequest, types.ErrOptionWithSkipRetry())

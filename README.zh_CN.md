@@ -467,7 +467,7 @@ docker run --name new-api -d --restart always \
 
 ### 💖 感谢使用 New API
 
-如果这个项目对你有帮助，欢迎给我们一个 ⭐️ Star！
+如果这个项目对你有帮助，欢迎给我们一个1 ⭐️ Star！
 
 **[官方文档](https://docs.newapi.pro/zh/docs)** • **[问题反馈](https://github.com/Calcium-Ion/new-api/issues)** • **[最新发布](https://github.com/Calcium-Ion/new-api/releases)**
 
